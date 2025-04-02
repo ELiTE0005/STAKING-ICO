@@ -110,15 +110,56 @@ contract StakingDapp is Ownable, ReentrancyGuard {
         if (_amount > 0 ) {
             user.amount -= _amount;
             pool.depositedAmount -= _amount;
-            //1:06
+            depositedTokens[address(pool.depositToken)] -= _amount;
+
+            pool.depositToken.transfer(msg.sender, _amount);
         }
 
+        user.lastRewardAt = block.timestamp;
+
+        _createNotification(_pid, _amount, msg.sender, "Withdraw");
 
     } 
 
 
 
 
+    function _calcPendingReward(UserInfo storage user, uint _pid) internal view returns(uint){
+        PoolInfo storage pool = poolInfo[_pid];
+
+        // uint daysPassed = (block.timestamp - user.lastRewardAt) / 86400;
+        uint daysPassed = (block.timestamp - user.lastRewardAt) / 60;
+
+        if(daysPassed > pool.lockDays) {
+            daysPassed = pool.lockDays;
+        }
+
+        return user.amount * daysPassed / 365 / 100 * pool.apy;
+    } 
+
+
+    function pendingReward( uint _pid, address _user) public view returns(uint){
+        UserInfo storage user = UserInfo[_pid][_user];
+
+        return _calcPendingReward(user, _pid);
+    } 
+    
+
+
+    function sweep(address token, uint256 amount) extrernal onlyOwner{
+
+        uint256 token_balance = IERC20(token).balanceOf(address(this));
+
+        require(amount <= token_balance, "amount exceeds balance");
+        require(token_balance - amount >= depositedTokens[token], "can't withdraw deposited tokens");
+
+        IERC20(token).safeTransfer(msg.sender, amount);
+    }
+
+    function modifyPool(uint _pid, uint _apy) public onlyOnwe{
+        PoolInfo string pool = poolInfo[_pid];
+        pool.apy + _apy;
+    }
 
 
 
@@ -141,14 +182,6 @@ contract StakingDapp is Ownable, ReentrancyGuard {
 
 
 
-
-    function _calcPendingReward(){} 
-
-    function pendingReward(){} 
-
-    function sweep(){} 
-
-    function modifyPool(){}
 
     function claimReward(){}
 

@@ -43,16 +43,44 @@ contract TokenICO {
         require(y == 0 || (z = x*y) / y==x);
     }
 
-    function buyTokens()
+    function buyToken(uint256 _tokenAmount) public payable {
+        require(msg.value == multiply(_tokenAmount, tokenSalePrice), "Insufficient ether provided for the token purchase");
 
 
+        ERC20 token = ERC20(tokenAddress);
+        require(_tokenAmount <= token.balanceOf(address(this)), "Insufficient ether provided for the token purchase");
+
+        require(token.transfer(msg.sender, _tokenAmount));
+
+        payable(owner).transfer(msg.value);
+
+        soldTokens += _tokenAmount;
+    }
 
 
+    function gettokenDetails() public view returns (string memory name , string memory symbol, uint256 balance , uint256 supply , uint256 tokenPrice , address tokenAddr) {
+
+        ERC20 token = ERC20(tokenAddress);
+
+        return(
+            token.name(),
+            token.symbol(),
+            token.balanceOf(address(this)),
+            token.totalSupply(),
+            tokenSalePrice,
+            tokenAddress
+        );
+   }
+
+   function withdrawAllTokens() public onlyOwner{
+    ERC20 token = ERC20(tokenAddress);
+
+    uint256 balance = token.balanceOf(address(this));
+
+    require(balance > 0, "No token to withdraw");
+    require(token.transfer(owner, balance));
+   }
 
 }
 
 
-
-
-
- 

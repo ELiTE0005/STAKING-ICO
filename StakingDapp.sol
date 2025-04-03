@@ -692,9 +692,9 @@ contract StakingDapp is Ownable, ReentrancyGuard {
         IERC20(token).safeTransfer(msg.sender, amount);
     }
 
-    function modifyPool(uint _pid, uint _apy) public view onlyOwner{
+    function modifyPool(uint _pid, uint _apy) public onlyOwner{
         PoolInfo storage pool = poolInfo[_pid];
-        pool.apy + _apy;
+        pool.apy = _apy;
     }
 
     function claimReward(uint _pid) public nonReentrant{
